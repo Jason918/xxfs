@@ -1,0 +1,133 @@
+Client 接口
+[文件]
+xxfs add file path
+    C->N:   POST N:port/path/file?file_size=12345&type=file&block_size=64
+    N->C:   {
+                status:"ok"/"error",
+                data:{ //if status == ok;
+                    fid:xxxx, //file id,any unique string
+                    block_num:12,
+                    block_list:[
+                        {
+                            servers:["127.0.0.1:1234",...],
+                            bid:8183 //block id,any unique string
+                            index:0
+                        },
+                        ....
+                    ]
+                }
+                error_msg:"file already exists! blabla..." //if status == error
+            }
+    C->S:   POST S:port/fid/bid
+    S->C:   {
+                status:"ok"/"error",
+                error_msg:...
+            }
+
+xxfs get path/file
+    C->N:   GET N:port/path/file?type=file&info=data
+    N->C:   {
+                status:"ok"/"error",
+                data:{ //if status == ok;
+                    fid:xxxx, //file id
+                    block_num:12,
+                    block_list:[
+                        {
+                            servers:["127.0.0.1:1234",...],
+                            bid:1223 //block id
+                            index:0
+                        },
+                        ....
+                    ]
+                }
+                error_msg:"file does not  exists! blabla..." //if status == error
+            }
+    C->S:   GET S:port/fid/bid
+    S->C:   {
+                status:"ok"/"error",
+                error_msg:...,
+
+                data:{
+                    size:1234,
+                    content:"...."
+                }
+            }
+
+xxfs delete path/file
+    C->N:   DELETE N:port/path/file?type="file"
+    N->C:   {
+                status:"ok"/"error",
+                error_msg:"file does not exists! blabla..." //if status == error
+                //暂时忽略数据块的释放，在服务端可以直接将相关数据标记trash
+            }
+xxfs exist path/file
+    C->N:   GET N:port/path/file?info=exist&type=file
+    N->C:   {
+                status:"ok"/"error",
+                error_msg:"file does not exists! blabla..." //if status == error
+                result:true/false
+            }
+
+xxfs sizeof path/file
+    C->N:   GET N:port/path/file?info=size&type=file
+    N->C:   {
+                status:"ok"/"error",
+                error_msg:"file does not exists! blabla..." //if status == error
+                result:12345 //单位Byte
+            }
+
+xxfs append path/file append_file
+    C->N:   PUT N:port/path/file?file_size=12345&block_size=12312
+    N->C:   {
+                status:"ok"/"error",
+                data:{ //if status == ok;
+                    fid:xxxx, //file id
+                    append_block_num:12,    //注意此处增加了append
+                    append_block_list:[
+                        {
+                            server:["127.0.0.1:1234",...],
+                            bid:23wdf32 //block id
+                            index:10
+                        },
+                        ....
+                    ]
+                }
+                error_msg:"blabla..." //if status == error
+            }
+    //这里跟add相同。
+    C->S:   POST S:port/fid/bid
+    S->C:   {
+                status:"ok"/"error",
+                error_msg:...
+            }
+
+[目录]
+xxfs create path
+    C->N:   POST N:port/path?type=directory
+    N->C:   {
+                status:"ok"/"error",
+                error_msg:"directory already exists! blabla..." //if status == error
+            }
+xxfs delete path
+    C->N:   DELETE N:port/path?type="directory"
+    N->C:   {
+                status:"ok"/"error",
+                error_msg:"directory already exists! blabla..." //if status == error
+                //TODO 加个非空warning
+            }
+
+xxfs list path
+    C->N:   GET N:port/path&type=directory
+    N->C:   {
+                status:"ok"/"error",
+                data:{ //if status == ok;
+                    
+                    file_num:12,    
+                    file_list:[
+                        "a.txt",
+                        "b.rmvb",
+                        ....
+                    ]
+                }
+                error_msg:"directory already exists! blabla..." //if status == error
+            }
