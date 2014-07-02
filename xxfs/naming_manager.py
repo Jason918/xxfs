@@ -135,6 +135,19 @@ class NamingSever:
 
         return jason
 
+    """delete file"""
+    def deleteFile(self, allPath, fileName):
+        jason = {}
+
+        fileID = self.getFileID(allPath, fileName)
+        
+        if self.namingTree.contains(fileID):
+            self.namingTree.remove_node(fileID)
+            jason["status"] = "ok"
+        else:
+            jason["status"] = "error"
+            jason["error_msg"] = "file does not exist!"
+
     """create dir"""
     def createDir(self, allPath):
         jason = {}
