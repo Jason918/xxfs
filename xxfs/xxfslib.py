@@ -254,7 +254,9 @@ def ls(argv):
 
     url = "http://"+config.NamingServer+"/"+remote_path
     param = {
-        "type":"directory"
+        "type":"directory",
+        "info":"file_list"
+
     }
     r = requests.get(url,params=param);
     ret = r.json()
