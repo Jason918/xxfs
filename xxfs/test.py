@@ -14,6 +14,8 @@ class HelloWorld(Resource):
         return {'hello': args ,'path':file_path}
     def post(self, file_path):
         args = parser.parse_args()
+        f = request.files['file']
+        print len(f)
         return {'hello': args,'path':file_path}
 
 api.add_resource(HelloWorld, '/<path:file_path>')

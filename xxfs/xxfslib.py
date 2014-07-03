@@ -12,19 +12,19 @@ def __check_local_file__(local_file):
         exit(1)
 
 def __upload_file_to_storage_servers__(local_file,fid,block_info_list):
-    fin = open(local_file,"rb");
-    for block_info in block_info_list:
-        storage_servers = block_info["storage_server_list"]
-        bid = block_info["bid"]
-        block_data = fin.read(config.BlockSize)
-        for storage_server in storage_servers:
-            url = "http://" + storage_server + "/" + fid + "/" + bid
-            r = requests.post(url,data={"file":block_data})
-            ret = r.json()
-            if ret["status"] == "error":
-                print ret["message"]
-                exit(1)
-    fin.close();
+    with open(local_file,"rb") as fin:
+        for block_info in block_info_list:
+            storage_servers = block_info["storage_server_list"]
+            bid = block_info["bid"]
+            block_data = fin.read(config.BlockSize)
+            print len(block_data)
+            for storage_server in storage_servers:
+                url = "http://" + storage_server + "/" + fid + "/" + bid
+                r = requests.post(url,files={"file":(bid,block_data)})
+                ret = r.json()
+                if ret["status"] == "error":
+                    print ret["message"]
+                    exit(1)
 
 def add(argv):
     if len(argv) < 2:
@@ -160,9 +160,10 @@ def get(argv):
         block_size = 0
         for storage_server in storage_servers:
             url = "http://" + storage_server + "/" + fid + "/" + bid
-            # print url
-            r = requests.get(url,data=block_data)
-            # ret = r.json()
+            print url
+            r = requests.get(url,params={"op":"test"})
+            print r
+            ret = r.json()
             print ret
             if ret["status"] != "ok":
                 print ret["message"]

@@ -47,7 +47,7 @@ class Naming(Resource):
                             },
                             {
                                 'servers':["127.0.0.1:20001"],
-                                'bid':"bid-test1", 
+                                'bid':"bid-test-1", 
                                 'index':1
                             },
                         ]

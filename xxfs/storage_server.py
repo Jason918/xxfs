@@ -10,23 +10,31 @@ storage_path = "./"
 
 class Storage(Resource):
     def get(self, fid, bid):
-        target_file = storage_path + '/' + fid + "-" + bid;
-        if not os.path.isfile(target_file):
-            return {'status': "error",'message':"block does not exist"}  
-        fin = open(target_file , 'rb')
-        in_data = fin.read()
-        data = {
-            'content':in_data,
-            'size':len(in_data)
-        }
+        target_file = storage_path + '/' + fid + "-" + bid
+        print target_file
+        # if not os.path.isfile(target_file):
+        #     return {'status': "error",'message':"block does not exist"}  
+        # fin = open(target_file , 'rb')
+        # send_file(fin)
+        # in_data = fin.read()
+        # data = {
+        #     'content':in_data,
+        #     'size':len(in_data)
+        # }
+
         fin.close()
-        return {'status':"ok", 'data':data}
+        # return {'status':"ok", 'data':data}
 
     def post(self, fid, bid):
-        fout = open(storage_path + '/' + fid + "-" + bid, 'wb')
-        data = request.form["file"]
-        fout.write(data.encode('utf-8'))
-        fout.close()
+        upload_file = request.files['file']
+
+        file_path = storage_path + '/' + fid + "-" + bid
+        upload_file.save(file_path)
+        # print len(request.form["file"].decode("utf-8"))
+        # fout = open(storage_path + '/' + fid + "-" + bid, 'w')
+        # data = request.form["file"]
+        # fout.write(data)
+        # fout.close()
         return {'status': "ok"}
 
 # api.add_resource(Storage, '/<path:file_path>')
