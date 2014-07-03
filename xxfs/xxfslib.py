@@ -1,3 +1,4 @@
+#coding=utf-8
 import requests
 import os
 import config
@@ -21,7 +22,7 @@ def __upload_file_to_storage_servers__(local_file,fid,block_info_list):
             r = requests.post(url,data={"file":block_data})
             ret = r.json()
             if ret["status"] == "error":
-                print ret["error_msg"]
+                print ret["message"]
                 exit(1)
     fin.close();
 
@@ -31,7 +32,7 @@ def add(argv):
         exit(1)
     local_file = argv[0]
     remote_path = argv[1]
-    
+    # print remote_path
     __check_local_file__(local_file)
 
     file_name = os.path.basename(local_file)
@@ -47,17 +48,17 @@ def add(argv):
     ret = r.json()
     
     if ret["status"] == "error":
-        print ret["error_msg"]
+        print ret["message"]
         exit(1)
     data = ret["data"]
     fid = data["fid"]
     block_num = data["block_num"]
     block_list = data["block_list"]
     block_info_list = range(block_num)
-    for block in block_list:
-        index = int(block["index"]);
+    for block_info in block_list:
+        index = int(block_info["index"]);
         block_info_list[index] = {
-            "storage_server_list":block_info["block_servers"],
+            "storage_server_list":block_info["servers"],
             "bid":block_info["bid"]
         }
 
@@ -75,6 +76,7 @@ def append(argv):
     __check_local_file__(append_file)
     file_size = os.path.getsize(append_file)
     param = {
+        "type":"file",
         "file_size":file_size,
         "block_size":config.BlockSize
     }
@@ -84,7 +86,7 @@ def append(argv):
     ret = r.json()
     
     if ret["status"] == "error":
-        print ret["error_msg"]
+        print ret["message"]
         exit(1)
 
     data = ret["data"]
@@ -112,10 +114,10 @@ def delete(argv):
         'type':"file"
     }
     url = "http://" + config.NamingServer + "/" + remote_file
-    r = requests.delete(url,params=param);
+    r = requests.delete(url,params=param)
     ret = r.json()
     if ret["status"] == "error":
-        print ret["error_msg"]
+        print ret["message"]
         exit(1)
 
 def get(argv):
@@ -134,17 +136,17 @@ def get(argv):
     r = requests.get(url,params=param);
     ret = r.json()
     if ret["status"] == "error":
-        print ret["error_msg"]
+        print ret["message"]
         exit(1)
     data = ret["data"]
     fid = data["fid"]
     block_num = data["block_num"]
     block_list = data["block_list"]
     block_info_list = range(block_num)
-    for block in block_list:
-        index = int(block["index"]);
+    for block_info in block_list:
+        index = int(block_info["index"]);
         block_info_list[index] = {
-            "storage_server_list":block_info["block_servers"],
+            "storage_server_list":block_info["servers"],
             "bid":block_info["bid"]
         }
 
@@ -158,14 +160,16 @@ def get(argv):
         block_size = 0
         for storage_server in storage_servers:
             url = "http://" + storage_server + "/" + fid + "/" + bid
-            r = requests.post(url,data=block_data)
-            ret = r.json()
-            if ret["status"] == "error":
-                print ret["error_msg"]
+            # print url
+            r = requests.get(url,data=block_data)
+            # ret = r.json()
+            print ret
+            if ret["status"] != "ok":
+                print ret["message"]
                 exit(1)
             else:
                 block_size = int(ret["data"]["size"])
-                block_data = ret["data"]["content"]
+                block_data = ret["data"]["content"].encode('utf-8')
                 break;
 
         if block_size != len(block_data):
@@ -186,7 +190,7 @@ def exist(argv):
     r = requests.get(url,params=param);
     ret = r.json()
     if ret["status"] == "error":
-        print ret["error_msg"]
+        print ret["message"]
         exit(1)
     if ret["result"] == True:
         print "YES, it exists"
@@ -201,15 +205,15 @@ def sizeof(argv):
     remote_file = argv[0]
     url = "http://"+config.NamingServer+"/"+remote_file
     param = {
-        "info":"sizeof",
+        "info":"size",
         "type":"file"
     }
     r = requests.get(url,params=param);
     ret = r.json()
     if ret["status"] == "error":
-        print ret["error_msg"]
+        print ret["message"]
         exit(1)
-    print "size=",ret["result"]+"Byte"
+    print "size=",ret["result"],"Byte"
 
 def mkdir(argv):
     if len(argv) < 1:
@@ -223,7 +227,7 @@ def mkdir(argv):
     r = requests.post(url,params=param);
     ret = r.json()
     if ret["status"] == "error":
-        print ret["error_msg"]
+        print ret["message"]
         exit(1)
     print "mkdir success"
 
@@ -240,7 +244,7 @@ def rmdir(argv):
     r = requests.delete(url,params=param);
     ret = r.json()
     if ret["status"] == "error":
-        print ret["error_msg"]
+        print ret["message"]
         exit(1)
     print "rmdir success"
 
@@ -261,7 +265,7 @@ def ls(argv):
     r = requests.get(url,params=param);
     ret = r.json()
     if ret["status"] == "error":
-        print ret["error_msg"]
+        print ret["message"]
         exit(1)
 
     data = ret["data"]
