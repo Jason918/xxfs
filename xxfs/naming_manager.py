@@ -201,32 +201,74 @@ class NamingSever:
 
         return jason
 
+    """add Sever"""
     def addSever(self, severName, validBlock):
         self.severManager.addSever(severName, validBlock)
 
+    """remove Sever"""
+    def removeSever(self, severName):
+        jason = {}
+        severInfo = self.severManager.getSeverInfo(severName)
+        if severInfo == None:
+            jason["status"] = "error"
+            jason["error_msg"] = "sever does not exist!"
+        else:
+            transData = []
+            for blockInfo in severInfo:
+                if self.namingTree.contains(blockInfo.fileID):
+                    fileInfo = self.namingTree.get_node(blockInfo.fileID).data["data"]
+                    if fileInfo["block_num"] > blockInfo.fileIndex:
+                        fileBlock = fileInfo["block_list"][blockInfo.fileIndex]
+                        if fileBlock["bid"] == blockInfo.blockID:
+                            fileBlock["severs"].remove(severName)
+                            transData.append({"severs":[block for block in fileBlock["severs"]], "fid":fileInfo["fid"], "bid":fileBlock["bid"], "index":fileBlock["index"]})
+            self.severManager.removeSever(severName)
+            res = self.severManager.transfer(transData)            
+            if res == None:
+                jason["status"] = "error"
+                jason["error_msg"] = "sever does not have enough space!"
+                jason["error_log"] = transData
+            else:
+                for i in range(len(transData)):
+                    fileData = self.namingTree.get_node(transData[i]["fid"]).data["data"]
+                    fileData["block_list"][transData[i]["index"]]["severs"].append(res[i])
+                    transData[i]["trans_sever"] = res[i]
+                jason["status"] = "ok"
+                jason["data"] = transData
+        return jason
+
 if __name__ == "__main__":
     a = NamingSever()
-    a.addSever("192.168.0.1:2000", 20)
-    a.addSever("192.168.0.1:2001", 20)
-    a.addSever("192.168.0.1:2002", 20)
+    a.addSever("192.168.0.1:2000", 2)
+    a.addSever("192.168.0.1:2001", 4)
+    a.addSever("192.168.0.1:2002", 6)
+    a.addSever("192.168.0.1:2003", 8)
+    a.addSever("192.168.0.1:2004", 10)
     res = a.addFile("aaa/bbb/aaa", "aaa", 2*64*1024*1024, 64*1024*1024)
+#    print res
     res = a.appendFile("aaa/bbb/aaa", "aaa", 3*64*1024*1024, 64*1024*1024)
-    print res
+#    print res
     res = a.getFile("aaa/bbb/aaa", "aaa")
     print res
-    res = a.containsFile("aaa/bbb/ccc", "aaa")
+#    res = a.containsFile("aaa/bbb/ccc", "aaa")
+#    print res
+#    res = a.containsFile("aaa/bbb/aaa", "aaa")
+#    print res
+#    res = a.sizeofFile("aaa/bbb/aaa", "aaa")
+#    print res
+#    res = a.createDir("aaa/bbb/aaa")
+#    print res
+#    res = a.createDir("aaa/bbb/ccc")
+#    print res
+#    res = a.deleteDir("aaa/bbb/aaa")
+#    print res
+#    res = a.listDir("aaa")
+#    print res
+    a.deleteFile("aaa/bbb/aaa", "aaa")
+    a.addFile("aaa/bbb/aaa", "aaa", 64*1024*1024, 64*1024*1024)
+    res = a.getFile("aaa/bbb/aaa", "aaa")
     print res
-    res = a.containsFile("aaa/bbb/aaa", "aaa")
-    print res
-    res = a.sizeofFile("aaa/bbb/aaa", "aaa")
-    print res
-    res = a.createDir("aaa/bbb/aaa")
-    print res
-    res = a.createDir("aaa/bbb/ccc")
-    print res
-    res = a.deleteDir("aaa/bbb/aaa")
-    print res
-    res = a.listDir("aaa")
+    res = a.removeSever("192.168.0.1:2003")
     print res
     a.namingTree.show(idhidden = False)
 

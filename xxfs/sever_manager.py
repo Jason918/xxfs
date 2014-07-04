@@ -62,11 +62,55 @@ class SeverManager:
                 heapq.heappush(self.severHeap, tmp[j])
         return res
 
+    def getSeverInfo(self, severName):
+        for sever in self.severHeap:
+            if severName == sever.severName:
+                return sever.blockInfo
+
+    def removeSever(self, severName):
+        self.severHeap = [sever for sever in self.severHeap if sever.severName != severName]
+        heapq.heapify(self.severHeap)
+    
+    def isTransfer(self, transData):
+        severCopy = []
+        for sever in self.severHeap:
+            severCopy.append({"validBlock":sever.validBlock, "severName":sever.severName})
+        for block in transData:
+            thisBlock = False
+            for sever in severCopy:
+                if not sever["severName"] in block["severs"] and sever["validBlock"] > 0:
+                    sever["validBlock"] -= 1
+                    thisBlock = True
+                    break
+            if not thisBlock:
+                return False
+        return True
+
+    def transfer(self, transData):
+        if not self.isTransfer(transData):
+            return
+        else:
+            res = []
+            for block in transData:
+                tmp = []
+                sever = heapq.heappop(self.severHeap)
+                while sever.severName in block["severs"]:
+                    tmp.append(sever)
+                    sever = heapq.heappop(self.severHeap)
+                tmp.append(sever)
+                sever.validBlock -= 1
+                sever.blockInfo.append(BlockDefinition(block["bid"], block["fid"], block["index"]))
+                res.append(sever.severName)
+                for tmpSever in tmp:
+                    heapq.heappush(self.severHeap, tmpSever)
+            return res
+
 if __name__ == "__main__":
     a = SeverManager()
     a.addSever("192.168.0.1:2000",20)
     a.addSever("192.168.0.1:2001",40)
     a.addSever("192.168.0.1:2002",5)
     res = a.addFile("blabla", 4*1024*1024*64, 64*1024*1024, 5)
-    
+    print res
+    res = a.getSeverInfo("192.168.0.1:2002")
     print res
