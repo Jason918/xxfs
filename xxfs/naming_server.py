@@ -173,7 +173,7 @@ class Naming(Resource):
             file_size = args['file_size']
             file_name = os.path.basename(target_path)
             file_path = os.path.dirname(target_path)
-            return naming.appendFile(__adapt_path__(file_path), file_name, file_size)
+            return naming.appendFile(__adapt_path__(file_path), file_name, file_size, config.BlockSize)
         elif args['type'] == 'storage_server':
             server_name = args['server_name']
             naming.getHeartBeat(server_name)

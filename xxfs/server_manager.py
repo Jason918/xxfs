@@ -54,7 +54,7 @@ class ServerManager:
         res = {"fid" : fileID, "block_num" : blockNum, "block_list" : []}
         for i in range(blockNum):
             blockID = uuid.uuid1().get_hex()
-            res["block_list"].append({"servers":[], "bid":blockID, "index":i+startIndex})
+            res["block_list"].append({"servers":[], "bid":blockID, "index":i})
             tmp = []
             for j in range(config.Redundancy):
                 serverDef = heapq.heappop(self.serverHeap)
@@ -115,7 +115,7 @@ if __name__ == "__main__":
     a.addServer("192.168.0.1:2000",20)
     a.addServer("192.168.0.1:2001",40)
     a.addServer("192.168.0.1:2002",5)
-    res = a.addFile("blabla", 4*1024*1024*64, 64*1024*1024, 5)
+    res = a.addFile("blabla", 4*1024*128, 128*1024, 5)
     print res
     res = a.getServerInfo("192.168.0.1:2002")
     print res
