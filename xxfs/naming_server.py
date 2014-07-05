@@ -7,7 +7,7 @@ import naming_manager
 
 app = Flask(__name__)
 api = Api(app)
-naming = naming_manager.NamingServer
+naming = naming_manager.NamingServer()
 
 post_parser = reqparse.RequestParser()
 post_parser.add_argument('type',type=str,required=True)
@@ -121,7 +121,9 @@ class Naming(Resource):
             port = args['port']
             space = args['storage_space']
             block_num = space/config.BlockSize
-            naming.addServer(host+str(port), block_num)
+            server_name = host+":"+str(port)
+            print server_name,block_num
+            naming.addServer(server_name, block_num)
             return {"status":"ok"}
         else:
             return __error__("invalid type")

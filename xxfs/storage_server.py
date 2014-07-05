@@ -54,24 +54,29 @@ def register(host, port, space):
         'storage_space': space
     }
     r = requests.post(url, params = param)
-    if r.status != 200:
+    if r.status_code != 200:
         print "register error"
-        exit(1)
+        exit(0)
     else:
         print "register success"
 
 
 if __name__ == '__main__':
-    argv = sys.argv()
-    if len(argv) < 3:
+    argv = sys.argv
+    if len(argv) < 5:
         print "not enough arguments"
         print """USAGE:
-        storage_server.py host port storage_path storage_space
+        storage_server.py host port storage_path storage_space(MB)
         """
+        exit(1)
     host = argv[1]
     port = int(argv[2])
     storage_path = argv[3]
-    storage_space = int(argv[4])
+    storage_space = int(argv[4]) * 1000000
+
+    if not os.path.exists(storage_path):
+        os.makedirs(storage_path)
+        print "storage path ", storage_path, " does not exists, creating..."
     register(host, port, storage_space)
 
     app.run(port=port,debug=True)
