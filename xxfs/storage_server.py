@@ -8,6 +8,7 @@ import config
 import requests
 import threading
 import time
+import requests
 
 app = Flask(__name__)
 api = Api(app)
@@ -50,11 +51,13 @@ class Storage(Resource):
     def put(self, fid, bid):
         print "trans fid:",base64.b64decode(fid)
         print "trans bid:",bid
-        target_server = request.params['trans_server']
+        target_server = request.args['trans_server']
         target_file = storage_path + '/' + bid
+        print "---"
         with open(target_file,"rb") as fin:
             block_data = fin.read()
-            url = "http://" + storage_server + "/" + fid + "/" + bid
+            print len(block_data)
+            url = "http://" + target_server + "/" + fid + "/" + bid
             r = requests.post(url,files={"file":(bid,block_data)})
             if r.status_code != 200:
                 print "trans error"
@@ -117,4 +120,4 @@ if __name__ == '__main__':
     hb.start()
     print "init done"
 
-    app.run(port=port,debug=True)
+    app.run(port=port,debug=True,use_debugger=False,use_reloader=False)

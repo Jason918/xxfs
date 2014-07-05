@@ -57,8 +57,8 @@ def add(argv):
     r = requests.post(url,params=param);
     # print r.url
     ret = r.json()
-    print ret
-    
+    # print ret
+
     if ret["status"] == "error":
         print ret["error_msg"]
         exit(1)
@@ -93,7 +93,7 @@ def append(argv):
         "block_size":config.BlockSize
     }
     url = "http://"+config.NamingServer+"/root"+remote_file
-    r = requests.post(url,params=param);
+    r = requests.put(url,params=param)
     # print r.url
     ret = r.json()
     
@@ -106,10 +106,10 @@ def append(argv):
     block_num = data["append_block_num"]
     block_list = data["append_block_list"]
     block_info_list = range(block_num)
-    for block in block_list:
-        index = int(block["index"]);
+    for block_info in block_list:
+        index = int(block_info["index"]);
         block_info_list[index] = {
-            "storage_server_list":block_info["block_servers"],
+            "storage_server_list":block_info["servers"],
             "bid":block_info["bid"]
         }
 

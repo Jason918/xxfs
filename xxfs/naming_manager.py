@@ -42,7 +42,7 @@ class HeartBeatChecker(threading.Thread):
                 server = heapq.heappop(naming_server.heartBeatQueue)
                 if nowTime - server.timeStamp > config.HeartBeatTime:
                     print server.serverName
-                    url = "http://"+config.NamingServer
+                    url = "http://"+config.NamingServer+"/storage_server"
                     param = {
                         "server_name":server.serverName,
                         'type':'storage_server'

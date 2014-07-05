@@ -5,6 +5,9 @@ import config
 import os
 import naming_manager
 from naming_manager import naming_server as naming
+import base64
+import requests
+
 app = Flask(__name__)
 api = Api(app)
 
@@ -17,6 +20,12 @@ post_parser.add_argument('host',type=str)
 post_parser.add_argument('port',type=int)
 post_parser.add_argument('storage_space',type=int)
 
+put_parser = reqparse.RequestParser()
+put_parser.add_argument('type',type=str,required=True)
+put_parser.add_argument('file_size',type=int)
+put_parser.add_argument('block_size',type=int)
+put_parser.add_argument('server_name',type=str)
+
 
 get_parser = reqparse.RequestParser()
 get_parser.add_argument('type',type=str,required=True)
@@ -24,6 +33,7 @@ get_parser.add_argument('info',type=str)
 
 delete_parser = reqparse.RequestParser()
 delete_parser.add_argument('type',type=str,required=True)
+delete_parser.add_argument('server_name',type=str)
 
 def __error__(err_msg):
     return {'status':"error", "message":err_msg}
@@ -151,7 +161,9 @@ class Naming(Resource):
             target_server = args['server_name']
             print target_server,"is offline"
             trans = naming.removeServer(target_server)
-            for t in trans:
+            print trans
+            for t in trans['data']:
+                print t
                 source_server = t["servers"][0]
                 fid_64 = base64.b64encode(t['fid'])
                 bid = t['bid']
@@ -160,22 +172,26 @@ class Naming(Resource):
                 param = {
                     'trans_server':target_server
                 }
-                r = requests.put(source_server,params = param)
+                print url
+                r = requests.put(url,params = param)
+                print url, r.status_code
             print "trans storage done"
         else:
             return __error__("invalid type")
 
     def put(self, target_path):
-        args = post_parser.parse_args()
+        args = put_parser.parse_args()
+        
         if args['type'] == 'file':
             if not args['file_size'] or not args['block_size'] or int(args['block_size']) != config.BlockSize:
                 return  {'status':"error", "message":"invalid input"}
             file_size = args['file_size']
             file_name = os.path.basename(target_path)
             file_path = os.path.dirname(target_path)
-            return naming.appendFile(__adapt_path__(file_path), file_name, file_size)
+            return naming.appendFile(__adapt_path__(file_path), file_name, file_size, config.BlockSize)
         elif args['type'] == 'storage_server':
             server_name = args['server_name']
+            print server_name
             naming.getHeartBeat(server_name)
         else:
             return __error__("invalid type")
@@ -192,4 +208,4 @@ if __name__ == '__main__':
     check = naming_manager.HeartBeatChecker()
     check.setDaemon(True)
     check.start()
-    app.run(port=config.NamingServerPort,debug=True)
+    app.run(port=config.NamingServerPort,debug=False)
