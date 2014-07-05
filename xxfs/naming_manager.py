@@ -149,6 +149,8 @@ class NamingServer:
             jason["status"] = "error"
             jason["error_msg"] = "file does not exist!"
 
+        return jason
+
     """create dir"""
     def createDir(self, allPath):
         jason = {}
@@ -204,7 +206,7 @@ class NamingServer:
 
     """add Server"""
     def addServer(self, serverName, validBlock):
-        print serverName
+        print serverName,validBlock
         self.serverManager.addServer(serverName, validBlock)
 
     """remove Server"""

@@ -27,21 +27,25 @@ delete_parser.add_argument('type',type=str,required=True)
 
 def __error__(err_msg):
     return {'status':"error", "message":err_msg}
-
+def __adapt_path__(path):
+    if path[-1] == '/':
+        return path[:-1]
+    else:
+        return path
 class Naming(Resource):
     
     def get(self, target_path):
         args = get_parser.parse_args()
-        print args
+        print "GET ",args
         if args['type'] == 'file' :
-            #TODO check target_path
             file_name = os.path.basename(target_path)
             file_path = os.path.dirname(target_path)
-            app.logger.debug("file_name:"+file_name)
-            app.logger.debug("file_path:"+file_path)
+            print "full_path:",target_path
+            print "file_name:",file_name
+            print "file_path:",file_path
             
             if args['info'] == 'data':
-                return naming.getFile(file_path, file_name)
+                return naming.getFile(__adapt_path__(file_path), file_name)
                 # return {
                 #     'status':"ok",
                 #     'data':{ 
@@ -63,36 +67,38 @@ class Naming(Resource):
                 # }
                 
             elif args['info'] == 'exist':
-                return naming.containFile(file_path,file_name)
+                return naming.containFile(__adapt_path__(file_path),file_name)
                 # return {'status':"ok","result":True}
                 
             elif args['info'] == 'size':
-                return naming.sizeofFile(file_path, file_name)
+                return naming.sizeofFile(__adapt_path__(file_path), file_name)
                 # return {'status':"ok","result":111}
                 
             else:
                 return __error__("invalid info")
 
         elif args['type'] == 'directory':
-            return naming.listDir(target_path)
+            print "ls",target_path
+            return naming.listDir(__adapt_path__(target_path))
         else:
             return __error__("invalid type")
 
     def post(self, target_path):
         args = post_parser.parse_args()
         if args['type'] == 'file':
+            print "full_path:",target_path
             file_name = os.path.basename(target_path)
             file_path = os.path.dirname(target_path)
-            app.logger.debug("file_name:"+file_name)
-            app.logger.debug("file_path:"+file_path)
+            print "file_name:",file_name
+            print "file_path:",file_path
 
             file_size = args['file_size']
             block_size = args['block_size']
             if block_size != config.BlockSize :
                 return __error__("block_size mismatch")
-            app.logger.debug("file_size:"+str(file_size))
+            print "file_size:"+str(file_size)
 
-            return naming.addFile(file_path, file_name, file_size, block_size)
+            return naming.addFile(__adapt_path__(file_path), file_name, file_size, block_size)
             # return {
             #     'status':"ok",
             #     'data':{ 
@@ -113,9 +119,10 @@ class Naming(Resource):
             #     }
             # }
         elif args['type'] == 'directory':
-            app.logger.debug("path:"+target_path)
+            print "create directory ", target_path
+            # app.logger.debug("path:"+target_path)
             # return {'status':"ok"}
-            return createDir(target_path)
+            return naming.createDir(__adapt_path__(target_path))
         elif args['type'] == 'storage_server':
             host = args['host']
             port = args['port']
@@ -135,10 +142,10 @@ class Naming(Resource):
             file_name = os.path.basename(target_path)
             file_path = os.path.dirname(target_path)
             
-            return naming.deleteFile(file_path, file_name)
+            return naming.deleteFile(__adapt_path__(file_path), file_name)
             # return {'status':"ok"}
         elif args['type'] == 'directory':
-            return naming.deleteDir(target_path)
+            return naming.deleteDir(__adapt_path__(target_path))
             # return {'status':"ok"}
         else:
             return __error__("invalid type")
@@ -150,7 +157,7 @@ class Naming(Resource):
         file_size = args['file_size']
         file_name = os.path.basename(target_path)
         file_path = os.path.dirname(target_path)
-        return appendFile(file_path, file_name, file_size)
+        return naming.appendFile(__adapt_path__(file_path), file_name, file_size)
         # return {'status':"ok"}
 
 
@@ -159,4 +166,5 @@ api.add_resource(Naming, '/<path:target_path>')
 
 
 if __name__ == '__main__':
-    app.run(port=config.NamingServerPort,debug=True)
+    naming.createDir("root")
+    app.run(port=config.NamingServerPort,debug=False)

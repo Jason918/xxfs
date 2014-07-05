@@ -14,7 +14,7 @@ storage_path = "./"
 
 class Storage(Resource):
     def get(self, fid, bid):
-        target_file = storage_path + '/' + fid + "-" + bid
+        target_file = storage_path + '/' + bid
         print "request block:",target_file
         if not os.path.isfile(target_file):
             return {'status': "error",'message':"block does not exist"}  
@@ -31,9 +31,11 @@ class Storage(Resource):
         return {'status':"ok", 'data':data}
 
     def post(self, fid, bid):
+        print "fid:",base64.b64decode(fid)
+        print "bid:",bid
         upload_file = request.files['file']
 
-        file_path = storage_path + '/' + fid + "-" + bid
+        file_path = storage_path + '/' + bid
         upload_file.save(file_path)
         # print len(request.form["file"].decode("utf-8"))
         # fout = open(storage_path + '/' + fid + "-" + bid, 'w')
