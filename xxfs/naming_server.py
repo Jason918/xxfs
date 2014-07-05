@@ -13,6 +13,10 @@ post_parser = reqparse.RequestParser()
 post_parser.add_argument('type',type=str,required=True)
 post_parser.add_argument('file_size',type=int)
 post_parser.add_argument('block_size',type=int)
+post_parser.add_argument('host',type=str)
+post_parser.add_argument('port',type=int)
+post_parser.add_argument('storage_space',type=int)
+
 
 get_parser = reqparse.RequestParser()
 get_parser.add_argument('type',type=str,required=True)
@@ -112,6 +116,13 @@ class Naming(Resource):
             app.logger.debug("path:"+target_path)
             # return {'status':"ok"}
             return createDir(target_path)
+        elif args['type'] == 'storage_server':
+            host = args['host']
+            port = args['port']
+            space = args['storage_space']
+            block_num = space/config.BlockSize
+            naming.addServer(host+str(port), block_num)
+            return {"status":"ok"}
         else:
             return __error__("invalid type")
 

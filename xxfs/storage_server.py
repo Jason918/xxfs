@@ -2,7 +2,11 @@
 from flask import Flask,request
 from flask.ext.restful import reqparse, abort, Api, Resource
 import os
+import sys
 import base64
+import config
+import requests
+
 app = Flask(__name__)
 api = Api(app)
 
@@ -41,5 +45,33 @@ class Storage(Resource):
 # api.add_resource(Storage, '/<path:file_path>')
 api.add_resource(Storage, '/<string:fid>/<string:bid>')
 
+def register(host, port, space):
+    url = "http://"+config.NamingServer+"/storage_server"
+    param = {
+        'type':'storage_server',
+        'host':host,
+        'port':port,
+        'storage_space': space
+    }
+    r = requests.post(url, params = param)
+    if r.status != 200:
+        print "register error"
+        exit(1)
+    else:
+        print "register success"
+
+
 if __name__ == '__main__':
-    app.run(port=20001,debug=True)
+    argv = sys.argv()
+    if len(argv) < 3:
+        print "not enough arguments"
+        print """USAGE:
+        storage_server.py host port storage_path storage_space
+        """
+    host = argv[1]
+    port = int(argv[2])
+    storage_path = argv[3]
+    storage_space = int(argv[4])
+    register(host, port, storage_space)
+
+    app.run(port=port,debug=True)
