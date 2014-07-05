@@ -11,6 +11,8 @@ app = Flask(__name__)
 api = Api(app)
 
 storage_path = "./"
+host = ""
+port = 0
 
 class Storage(Resource):
     def get(self, fid, bid):
@@ -43,6 +45,18 @@ class Storage(Resource):
         # fout.write(data)
         # fout.close()
         return {'status': "ok"}
+    def put(self, fid, bid):
+        print "trans fid:",base64.b64decode(fid)
+        print "trans bid:",bid
+        target_server = request.params['trans_server']
+        target_file = storage_path + '/' + bid
+        with open(target_file,"rb") as fin:
+            block_data = fin.read()
+            url = "http://" + storage_server + "/" + fid + "/" + bid
+            r = requests.post(url,files={"file":(bid,block_data)})
+            if r.status_code != 200:
+                print "trans error"
+                
 
 # api.add_resource(Storage, '/<path:file_path>')
 api.add_resource(Storage, '/<string:fid>/<string:bid>')
@@ -61,6 +75,19 @@ def register(host, port, space):
         exit(0)
     else:
         print "register success"
+
+class HeartBeatSender(threading.Thread):
+    def __init__(self):
+        threading.Thread.__init__(self)
+    def run(self):
+        url = "http://"+config.NamingServer+"/storage_server"
+        param = {
+            'type':'storage_server',
+            'server_name':host+":"+int(port)
+        }
+        while True:
+            requests.put(url,params = prams)
+            time.sleep(1)
 
 
 if __name__ == '__main__':
@@ -82,3 +109,7 @@ if __name__ == '__main__':
     register(host, port, storage_space)
 
     app.run(port=port,debug=True)
+
+    hb = HeartBeatSender()
+    hb.setDaemon(True)
+    hb.start()

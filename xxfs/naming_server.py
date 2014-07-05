@@ -147,18 +147,37 @@ class Naming(Resource):
         elif args['type'] == 'directory':
             return naming.deleteDir(__adapt_path__(target_path))
             # return {'status':"ok"}
+        elif args['type'] == 'storage_server':
+            target_server = args['server_name']
+            trans = naming.removeServer(target_server)
+            for t in trans:
+                source_server = t["servers"][0]
+                fid_64 = base64.b64encode(t['fid'])
+                bid = t['bid']
+                target_server = t['trans_server']
+                url = "http://" + source_server + "/" + fid_64 + "/"+bid
+                param = {
+                    'trans_server':target_server
+                }
+                r = requests.put(source_server,params = param)
+            print "trans storage done"
         else:
             return __error__("invalid type")
 
     def put(self, target_path):
         args = post_parser.parse_args()
-        if args['type'] != 'file' or not args['file_size'] or not args['block_size'] or int(args['block_size']) != config.BlockSize:
-            return  {'status':"error", "message":"invalid input"}
-        file_size = args['file_size']
-        file_name = os.path.basename(target_path)
-        file_path = os.path.dirname(target_path)
-        return naming.appendFile(__adapt_path__(file_path), file_name, file_size)
-        # return {'status':"ok"}
+        if args['type'] == 'file':
+            if not args['file_size'] or not args['block_size'] or int(args['block_size']) != config.BlockSize:
+                return  {'status':"error", "message":"invalid input"}
+            file_size = args['file_size']
+            file_name = os.path.basename(target_path)
+            file_path = os.path.dirname(target_path)
+            return naming.appendFile(__adapt_path__(file_path), file_name, file_size)
+        elif args['type'] == 'storage_server':
+            server_name = args['server_name']
+            naming.getHeartBeat(server_name)
+        else:
+            return __error__("invalid type")
 
 
 
@@ -166,5 +185,10 @@ api.add_resource(Naming, '/<path:target_path>')
 
 
 if __name__ == '__main__':
-    naming.createDir("root")
     app.run(port=config.NamingServerPort,debug=False)
+
+    naming.createDir("root")
+
+    check = HeartBeatChecker()
+    check.setDaemon(True)
+    check.start()

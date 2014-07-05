@@ -41,7 +41,8 @@ class HeartBeatChecker(threading.Thread):
                     print server.serverName
                     url = "http://"+config.NamingServer
                     param = {
-                        "server_name":server.serverName
+                        "server_name":server.serverName,
+                        'type':'storage_server'
                     }
                     requests.delete(url, params = param)
                 else:
