@@ -1,7 +1,11 @@
 #coding=utf-8
 import treelib
 import server_manager
-
+import time
+import threading
+import heapq
+import requests
+import config
 #class DirNode:
 #    "init"
 #    def __init__(self):
@@ -13,18 +17,52 @@ import server_manager
 #        self.isTrash = Fasle
 #        self.blockNum = blockNum
 #        self.blockList = blockList
-        
+class ServerHeartBeat:
+    def __init__(self, serverName, timeStamp):
+        self.serverName = serverName
+        self.timeStamp = timeStamp
+
+    def __cmp__(self, other):
+        assert other
+        if not isinstance(other, ServerHeartBeat):
+            raise TypeError
+        return cmp(self.timeStamp, other.timeStamp)
+
+class HeartBeatChecker(threading.Thread):
+    def __init__(self):
+        threading.Thread.__init__(self)
+    def run(self):
+        while True:
+            mutex.acquire()
+            if len(naming.heartBeatQueue) != 0:
+                nowTime = int(time.time())
+                server = heapq.heappop(naming.heartBeatQueue)
+                if nowTime - server.timeStamp > config.HeartBeatTime:
+                    print server.serverName
+                    url = "http://"+config.NamingServer
+                    param = {
+                        "server_name":server.serverName
+                    }
+                    requests.delete(url, params = param)
+                else:
+                    heapq.heappush(naming.heartBeatQueue, server)
+            mutex.release()
+            time.sleep(1)
+
+mutex = threading.Lock()
 class NamingServer:
     dirPrefix = "dir_"
     filePrefix = "file_"
     treeRoot = "dir_root"
+    global mutex
 
     """init"""
     def __init__(self):
         self.namingTree = treelib.Tree()
         self.namingTree.create_node(self.treeRoot, self.treeRoot)
         self.serverManager = server_manager.ServerManager()
-    
+        self.heartBeatQueue = [] 
+
     def getFileID(self, allPath, fileName):
         fileID = self.treeRoot + '/' + '/'.join([self.dirPrefix + path for path in allPath.split('/')]) + '/' + self.filePrefix + fileName
         return fileID
@@ -32,6 +70,22 @@ class NamingServer:
     def getPathID(self, allPath):
         pathID = self.treeRoot + '/' + '/'.join([self.dirPrefix + path for path in allPath.split('/')])
         return pathID
+
+    """get a hreart beat"""
+    def getHeartBeat(self, serverName):
+        mutex.acquire()
+        add = False
+        for server in self.heartBeatQueue:
+            if serverName == server.serverName:
+                add = True
+                server.timeStamp = int(time.time())
+                break
+        if add:
+            heapq.heapify(self.heartBeatQueue)
+        else:
+            newServer = ServerHeartBeat(serverName, int(time.time()))
+            heapq.heappush(self.heartBeatQueue, newServer)
+        mutex.release()
 
     """add file"""
     def addFile(self, allPath, fileName, fileSize, blockSize):
@@ -204,7 +258,6 @@ class NamingServer:
 
     """add Server"""
     def addServer(self, serverName, validBlock):
-        print serverName
         self.serverManager.addServer(serverName, validBlock)
 
     """remove Server"""
@@ -239,19 +292,28 @@ class NamingServer:
                 jason["data"] = transData
         return jason
 
+#a = NamingServer()
 if __name__ == "__main__":
-    a = NamingServer()
+    global a
     a.addServer("192.168.0.1:2000", 2)
     a.addServer("192.168.0.1:2001", 4)
     a.addServer("192.168.0.1:2002", 6)
     a.addServer("192.168.0.1:2003", 8)
     a.addServer("192.168.0.1:2004", 10)
-    res = a.addFile("aaa/bbb/aaa", "aaa", 2*64*1024*1024, 64*1024*1024)
-#    print res
-    res = a.appendFile("aaa/bbb/aaa", "aaa", 3*64*1024*1024, 64*1024*1024)
-#    print res
-    res = a.getFile("aaa/bbb/aaa", "aaa")
+    res = a.addFile("aaa/bbb/aaa", "aaa", 2*1024, 128*1024)
     print res
+    res = a.addFile("aaa/bbb/aa", "aaa", 2*1024, 128*1024)
+    print res
+    a.getHeartBeat("192.168.0.1:2000")
+    a.getHeartBeat("192.168.0.1:2001")
+
+    check = HeartBeatChecker()
+#    check.setDaemon(True)
+    check.start()
+#    res = a.appendFile("aaa/bbb/aaa", "aaa", 3*64*1024*1024, 64*1024*1024)
+#    print res
+#    res = a.getFile("aaa/bbb/aaa", "aaa")
+#    print res
 #    res = a.containsFile("aaa/bbb/ccc", "aaa")
 #    print res
 #    res = a.containsFile("aaa/bbb/aaa", "aaa")
@@ -266,11 +328,11 @@ if __name__ == "__main__":
 #    print res
 #    res = a.listDir("aaa")
 #    print res
-    a.deleteFile("aaa/bbb/aaa", "aaa")
-    a.addFile("aaa/bbb/aaa", "aaa", 64*1024*1024, 64*1024*1024)
-    res = a.getFile("aaa/bbb/aaa", "aaa")
-    print res
-    res = a.removeServer("192.168.0.1:2003")
-    print res
+#    a.deleteFile("aaa/bbb/aaa", "aaa")
+#    a.addFile("aaa/bbb/aaa", "aaa", 64*1024*1024, 64*1024*1024)
+#    res = a.getFile("aaa/bbb/aaa", "aaa")
+#    print res
+#    res = a.removeServer("192.168.0.1:2003")
+#    print res
     a.namingTree.show(idhidden = False)
 
