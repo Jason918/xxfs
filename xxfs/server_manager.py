@@ -25,8 +25,13 @@ class ServerManager:
         self.serverHeap = []
 
     def addServer(self, serverName, validBlock):
-        serverDef = ServerDefinition(serverName, validBlock)
-        heapq.heappush(self.serverHeap, serverDef)
+        alreadyAdd = False
+        for server in self.serverHeap:
+            if server.serverName == serverName:
+                alreadyAdd = True
+        if not alreadyAdd:
+            serverDef = ServerDefinition(serverName, validBlock)
+            heapq.heappush(self.serverHeap, serverDef)
 
     def isAvailable(self, needBlockNum):
         allNeedBlock = config.Redundancy * needBlockNum
