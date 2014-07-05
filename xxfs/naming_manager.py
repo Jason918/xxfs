@@ -6,6 +6,8 @@ import threading
 import heapq
 import requests
 import config
+
+
 #class DirNode:
 #    "init"
 #    def __init__(self):
@@ -34,9 +36,10 @@ class HeartBeatChecker(threading.Thread):
     def run(self):
         while True:
             mutex.acquire()
-            if len(naming.heartBeatQueue) != 0:
+            # print "checking HB"
+            if len(naming_server.heartBeatQueue) != 0:
                 nowTime = int(time.time())
-                server = heapq.heappop(naming.heartBeatQueue)
+                server = heapq.heappop(naming_server.heartBeatQueue)
                 if nowTime - server.timeStamp > config.HeartBeatTime:
                     print server.serverName
                     url = "http://"+config.NamingServer
@@ -46,7 +49,7 @@ class HeartBeatChecker(threading.Thread):
                     }
                     requests.delete(url, params = param)
                 else:
-                    heapq.heappush(naming.heartBeatQueue, server)
+                    heapq.heappush(naming_server.heartBeatQueue, server)
             mutex.release()
             time.sleep(1)
 
@@ -294,7 +297,7 @@ class NamingServer:
                 jason["status"] = "ok"
                 jason["data"] = transData
         return jason
-
+naming_server = NamingServer()
 #a = NamingServer()
 if __name__ == "__main__":
     global a

@@ -6,13 +6,15 @@ import sys
 import base64
 import config
 import requests
+import threading
+import time
 
 app = Flask(__name__)
 api = Api(app)
 
 storage_path = "./"
-host = ""
-port = 0
+host = "127.0.0.1"
+port = 10000
 
 class Storage(Resource):
     def get(self, fid, bid):
@@ -83,10 +85,11 @@ class HeartBeatSender(threading.Thread):
         url = "http://"+config.NamingServer+"/storage_server"
         param = {
             'type':'storage_server',
-            'server_name':host+":"+int(port)
+            'server_name':host+":"+str(port)
         }
         while True:
-            requests.put(url,params = prams)
+            # print "sending HB"
+            requests.put(url,params = param)
             time.sleep(1)
 
 
@@ -108,8 +111,10 @@ if __name__ == '__main__':
         print "storage path ", storage_path, " does not exists, creating..."
     register(host, port, storage_space)
 
-    app.run(port=port,debug=True)
 
     hb = HeartBeatSender()
     hb.setDaemon(True)
     hb.start()
+    print "init done"
+
+    app.run(port=port,debug=True)

@@ -4,10 +4,10 @@ from flask.ext.restful import reqparse, abort, Api, Resource
 import config
 import os
 import naming_manager
-
+from naming_manager import naming_server as naming
 app = Flask(__name__)
 api = Api(app)
-naming = naming_manager.NamingServer()
+
 
 post_parser = reqparse.RequestParser()
 post_parser.add_argument('type',type=str,required=True)
@@ -149,6 +149,7 @@ class Naming(Resource):
             # return {'status':"ok"}
         elif args['type'] == 'storage_server':
             target_server = args['server_name']
+            print target_server,"is offline"
             trans = naming.removeServer(target_server)
             for t in trans:
                 source_server = t["servers"][0]
@@ -185,10 +186,10 @@ api.add_resource(Naming, '/<path:target_path>')
 
 
 if __name__ == '__main__':
-    app.run(port=config.NamingServerPort,debug=False)
 
     naming.createDir("root")
 
-    check = HeartBeatChecker()
+    check = naming_manager.HeartBeatChecker()
     check.setDaemon(True)
     check.start()
+    app.run(port=config.NamingServerPort,debug=True)

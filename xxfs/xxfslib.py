@@ -26,7 +26,7 @@ def __upload_file_to_storage_servers__(local_file,fid,block_info_list):
             storage_servers = block_info["storage_server_list"]
             bid = block_info["bid"]
             block_data = fin.read(config.BlockSize)
-            print len(block_data)
+            # print len(block_data)
             for storage_server in storage_servers:
                 url = "http://" + storage_server + "/" + fid_64 + "/" + bid
                 r = requests.post(url,files={"file":(bid,block_data)})
@@ -57,6 +57,7 @@ def add(argv):
     r = requests.post(url,params=param);
     # print r.url
     ret = r.json()
+    print ret
     
     if ret["status"] == "error":
         print ret["error_msg"]
@@ -291,7 +292,7 @@ def ls(argv):
         exit(1)
 
     data = ret["data"]
-    print "File Number:",data['file_num']
+    print "Total :",data['file_num']
     for f in data["file_list"]:
         if f[:3] == "dir":
             print '  ',f[4:]+"/"
