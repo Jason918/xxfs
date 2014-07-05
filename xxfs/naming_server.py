@@ -1,10 +1,13 @@
+#coding=utf-8
 from flask import Flask,request
 from flask.ext.restful import reqparse, abort, Api, Resource
 import config
 import os
+import naming_manager
 
 app = Flask(__name__)
 api = Api(app)
+naming = naming_manager.NamingServer
 
 post_parser = reqparse.RequestParser()
 post_parser.add_argument('type',type=str,required=True)
@@ -34,37 +37,40 @@ class Naming(Resource):
             app.logger.debug("file_path:"+file_path)
             
             if args['info'] == 'data':
-                return {
-                    'status':"ok",
-                    'data':{ 
-                        'fid':"fid-test", 
-                        'block_num':2,
-                        'block_list':[
-                            {
-                                'servers':["127.0.0.1:20001"],
-                                'bid':"bid-test-0",
-                                'index':0
-                            },
-                            {
-                                'servers':["127.0.0.1:20001"],
-                                'bid':"bid-test-1", 
-                                'index':1
-                            },
-                        ]
-                    }
-                }
+                return naming.getFile(file_path, file_name)
+                # return {
+                #     'status':"ok",
+                #     'data':{ 
+                #         'fid':"fid-test", 
+                #         'block_num':2,
+                #         'block_list':[
+                #             {
+                #                 'servers':["127.0.0.1:20001"],
+                #                 'bid':"bid-test-0",
+                #                 'index':0
+                #             },
+                #             {
+                #                 'servers':["127.0.0.1:20001"],
+                #                 'bid':"bid-test-1", 
+                #                 'index':1
+                #             },
+                #         ]
+                #     }
+                # }
                 
             elif args['info'] == 'exist':
-                return {'status':"ok","result":True}
+                return naming.containFile(file_path,file_name)
+                # return {'status':"ok","result":True}
                 
             elif args['info'] == 'size':
-                return {'status':"ok","result":111}
+                return naming.sizeofFile(file_path, file_name)
+                # return {'status':"ok","result":111}
                 
             else:
                 return __error__("invalid info")
 
         elif args['type'] == 'directory':
-            pass
+            return naming.listDir(target_path)
         else:
             return __error__("invalid type")
 
@@ -82,41 +88,45 @@ class Naming(Resource):
                 return __error__("block_size mismatch")
             app.logger.debug("file_size:"+str(file_size))
 
-            return {
-                'status':"ok",
-                'data':{ 
-                    'fid':"fid-test", 
-                    'block_num':2,
-                    'block_list':[
-                        {
-                            'servers':["127.0.0.1:20001"],
-                            'bid':"bid-test-0",
-                            'index':0
-                        },
-                        {
-                            'servers':["127.0.0.1:20001"],
-                            'bid':"bid-test-1", 
-                            'index':1
-                        },
-                    ]
-                }
-            }
+            return naming.addFile(file_path, file_name, file_size, block_size)
+            # return {
+            #     'status':"ok",
+            #     'data':{ 
+            #         'fid':"fid-test", 
+            #         'block_num':2,
+            #         'block_list':[
+            #             {
+            #                 'servers':["127.0.0.1:20001"],
+            #                 'bid':"bid-test-0",
+            #                 'index':0
+            #             },
+            #             {
+            #                 'servers':["127.0.0.1:20001"],
+            #                 'bid':"bid-test-1", 
+            #                 'index':1
+            #             },
+            #         ]
+            #     }
+            # }
         elif args['type'] == 'directory':
-            #TODO 
             app.logger.debug("path:"+target_path)
-            return {'status':"ok"}
+            # return {'status':"ok"}
+            return createDir(target_path)
         else:
             return __error__("invalid type")
 
     def delete(self, target_path):
         args = delete_parser.parse_args()
-        print args
+        # print args
         if args['type'] == 'file':
-            #TODO
-            return {'status':"ok"}
+            file_name = os.path.basename(target_path)
+            file_path = os.path.dirname(target_path)
+            
+            return naming.deleteFile(file_path, file_name)
+            # return {'status':"ok"}
         elif args['type'] == 'directory':
-            #TODO 
-            return {'status':"ok"}
+            return naming.deleteDir(target_path)
+            # return {'status':"ok"}
         else:
             return __error__("invalid type")
 
@@ -124,11 +134,11 @@ class Naming(Resource):
         args = post_parser.parse_args()
         if args['type'] != 'file' or not args['file_size'] or not args['block_size'] or int(args['block_size']) != config.BlockSize:
             return  {'status':"error", "message":"invalid input"}
-        file_size = int(args['file_size'])
+        file_size = args['file_size']
         file_name = os.path.basename(target_path)
         file_path = os.path.dirname(target_path)
-
-        return {'status':"ok"}
+        return appendFile(file_path, file_name, file_size)
+        # return {'status':"ok"}
 
 
 
