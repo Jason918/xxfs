@@ -93,7 +93,9 @@ def append(argv):
         "block_size":config.BlockSize
     }
     url = "http://"+config.NamingServer+"/root"+remote_file
+
     r = requests.put(url,params=param)
+
     # print r.url
     ret = r.json()
     
@@ -301,4 +303,5 @@ def ls(argv):
     print '------------'
     print "ls success"
 
-
+if __name__ == "__main__":
+    print "aaa"

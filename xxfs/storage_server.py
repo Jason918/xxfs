@@ -117,7 +117,7 @@ if __name__ == '__main__':
 
     hb = HeartBeatSender()
     hb.setDaemon(True)
-    hb.start()
+#hb.start()
     print "init done"
 
-    app.run(port=port,debug=True,use_debugger=False,use_reloader=False)
+    app.run(port=port,debug=False)

@@ -208,4 +208,5 @@ if __name__ == '__main__':
     check = naming_manager.HeartBeatChecker()
     check.setDaemon(True)
     check.start()
-    app.run(port=config.NamingServerPort,debug=False)
+
+    app.run(port=config.NamingServerPort,debug=True)
