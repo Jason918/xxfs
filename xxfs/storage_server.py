@@ -2,7 +2,7 @@
 from flask import Flask,request
 from flask.ext.restful import reqparse, abort, Api, Resource
 import os
-
+import base64
 app = Flask(__name__)
 api = Api(app)
 
@@ -11,19 +11,20 @@ storage_path = "./"
 class Storage(Resource):
     def get(self, fid, bid):
         target_file = storage_path + '/' + fid + "-" + bid
-        print target_file
-        # if not os.path.isfile(target_file):
-        #     return {'status': "error",'message':"block does not exist"}  
-        # fin = open(target_file , 'rb')
-        # send_file(fin)
-        # in_data = fin.read()
-        # data = {
-        #     'content':in_data,
-        #     'size':len(in_data)
-        # }
-
+        print "request block:",target_file
+        if not os.path.isfile(target_file):
+            return {'status': "error",'message':"block does not exist"}  
+        fin = open(target_file , 'rb')
+        in_data = fin.read()
+        size = len(in_data)
+        print "block size:",size
+        in_data = base64.b64encode(in_data)
+        data = {
+            'content':in_data,
+            'size':size
+        }
         fin.close()
-        # return {'status':"ok", 'data':data}
+        return {'status':"ok", 'data':data}
 
     def post(self, fid, bid):
         upload_file = request.files['file']

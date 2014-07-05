@@ -2,6 +2,7 @@
 import requests
 import os
 import config
+import base64
 
 def __check_local_file__(local_file):
     if not os.path.exists(local_file):
@@ -160,17 +161,17 @@ def get(argv):
         block_size = 0
         for storage_server in storage_servers:
             url = "http://" + storage_server + "/" + fid + "/" + bid
-            print url
-            r = requests.get(url,params={"op":"test"})
-            print r
+            # print url
+            r = requests.get(url)
+            # print r
             ret = r.json()
-            print ret
+            # print ret
             if ret["status"] != "ok":
                 print ret["message"]
                 exit(1)
             else:
                 block_size = int(ret["data"]["size"])
-                block_data = ret["data"]["content"].encode('utf-8')
+                block_data = base64.b64decode(ret["data"]["content"])
                 break;
 
         if block_size != len(block_data):
