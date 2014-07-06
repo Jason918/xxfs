@@ -77,7 +77,8 @@ class Naming(Resource):
                 # }
                 
             elif args['info'] == 'exist':
-                return naming.containFile(__adapt_path__(file_path),file_name)
+                print "exist..........."
+                return naming.containsFile(__adapt_path__(file_path),file_name)
                 # return {'status':"ok","result":True}
                 
             elif args['info'] == 'size':

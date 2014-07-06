@@ -151,6 +151,7 @@ def get(argv):
     }
     r = requests.get(url,params=param);
     ret = r.json()
+    # print ret
     if ret["status"] == "error":
         print ret["error_msg"]
         exit(1)
@@ -159,12 +160,14 @@ def get(argv):
     block_num = data["block_num"]
     block_list = data["block_list"]
     block_info_list = range(block_num)
+    index = 0
     for block_info in block_list:
-        index = int(block_info["index"]);
+        # index = int(block_info["index"]);
         block_info_list[index] = {
             "storage_server_list":block_info["servers"],
             "bid":block_info["bid"]
         }
+        index += 1
 
     #get data from storage server
     file_name = os.path.basename(remote_file)

@@ -138,15 +138,15 @@ class NamingServer:
     """exist file"""
     def containsFile(self, allPath, fileName):
         jason = {}
-
+        print "a:",allPath,fileName
         fileID = self.getFileID(allPath, fileName)
-
+        print "b:",fileID
         if self.namingTree.contains(fileID):
             jason["status"] = "ok"
-            jason["result"] = "true"
+            jason["result"] = True
         else:
             jason["status"] = "ok"
-            jason["result"] = "false"
+            jason["result"] = False
         
         return jason
 
